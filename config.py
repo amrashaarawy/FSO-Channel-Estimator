@@ -30,9 +30,7 @@ TURBULENCE_REGIMES = {
 # Temporal correlation (coherence times, seconds)
 # Within Trichili's FSO range 100 µs – 10 ms
 TAU_SLOW = 10e-3    
-TAU_FAST = 1e-3     
-
-AR_ORDER = 2        # per sub-process (2 = momentum)     
+TAU_FAST = 1e-3       
 
 # Sampling & length
 DT        = 1e-4     # s/step 
