@@ -25,13 +25,13 @@ def gaussian_to_gamma(z, shape):
     g = gamma.ppf(u, a=shape, scale=1.0/shape)  # percentile 
     return g
 
-def generate_ht(tau_s, tau_f, alpha, beta, n_samples, dt, rng=None):
+def generate_ht(tau_s, tau_f, shape_slow, shape_fast, n_samples, dt, rng=None):
     """Two-timescale Gamma-Gamma channel: warp a slow and a fast AR(1) process, multiply."""
-    # alpha must be the bigger shape value (low shape = high variance, drowns the other timescale) - validated empirically
+    # slow gets the lower shape (higher variance) so its tail shows in the acf - validated
     slow_latent = generate_ar_process(tau_s, dt, n_samples, rng=rng)  # gaussian
-    fast_latent = generate_ar_process(tau_f, dt, n_samples, rng=rng)  
-    slow = gaussian_to_gamma(slow_latent, alpha)   # gamma
-    fast = gaussian_to_gamma(fast_latent, beta)   
+    fast_latent = generate_ar_process(tau_f, dt, n_samples, rng=rng)
+    slow = gaussian_to_gamma(slow_latent, shape_slow)   # gamma
+    fast = gaussian_to_gamma(fast_latent, shape_fast)
     ht = slow * fast                                # Gamma-Gamma, two timescales
     return ht
 
