@@ -5,3 +5,4 @@ data/
 *.pt
 *.png
 .ipynb_checkpoints/
+scratch_check.py
