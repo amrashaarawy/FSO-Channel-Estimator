@@ -1,6 +1,6 @@
 """
-dataset.py — forms the model's realistic input (h_hat) from r_e, and
-windows (h_hat, h_t) into (past, future) training pairs.
+dataset.py: windows (h_hat, h_t) into (past, future) training pairs and splits
+the sequence in time order into train / val / test blocks.
 """
 import torch
 from torch.utils.data import Dataset
@@ -14,7 +14,7 @@ class ChannelDataset(Dataset):
         self.horizon = horizon
 
     def __len__(self):
-        return len(self.h_hat) - self.window - self.horizon
+        return len(self.h_hat) - self.window - self.horizon + 1
 
     def __getitem__(self, i):
         x = self.h_hat[i : i + self.window].unsqueeze(-1)              # (window, 1)
@@ -22,8 +22,12 @@ class ChannelDataset(Dataset):
         return x, y
 
 
-def split_train_test(h_hat, h_t_true, train_frac):
-    """Time-based split, no shuffle"""
+def split_train_val_test(h_hat, h_t_true, train_frac, val_frac):
+    """Time-ordered three-way split, no shuffle. Test is the remainder."""
+    assert 0 < train_frac and 0 < val_frac and train_frac + val_frac < 1
     n = len(h_hat)
-    split = int(n * train_frac)
-    return (h_hat[:split], h_t_true[:split]), (h_hat[split:], h_t_true[split:])
+    i = int(n * train_frac)
+    j = i + int(n * val_frac)
+    return ((h_hat[:i], h_t_true[:i]),
+            (h_hat[i:j], h_t_true[i:j]),
+            (h_hat[j:], h_t_true[j:]))

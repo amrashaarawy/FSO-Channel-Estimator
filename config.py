@@ -50,7 +50,8 @@ NUM_LAYERS  = 1
 LR          = 1e-3   # Adam learning rate
 NUM_EPOCHS  = 50                                          
 BATCH_SIZE  = 64     
-TRAIN_FRAC  = 0.8    
+TRAIN_FRAC  = 0.7
+VAL_FRAC    = 0.15   # test fraction is the remainder
 
 # ACM & EVALUATION
 
