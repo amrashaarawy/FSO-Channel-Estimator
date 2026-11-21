@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.stats import norm, gamma        
-from channel import h_d, h_a, h_p, sample_noise   
+from channel import h_d, h_a, h_p   
 import config                               
 
 def generate_ar_process(tau, dt, n_samples, burn_in=1000, rng=None):
@@ -35,29 +35,33 @@ def generate_ht(tau_s, tau_f, shape_slow, shape_fast, n_samples, dt, rng=None):
     ht = slow * fast                                # Gamma-Gamma, two timescales
     return ht
 
-def generate_received_sequence(ht, system, L):
-    """Assemble the received sequence r_e[t] = eta*(P*h_d*h_a*h_p[t]*h_t[t]) + n[t] along time."""
-    # system params
+def generate_received_sequence(ht, system, L, snr_db, rng=None):
+    """r_e[t] = eta*P*h_d*h_a*h_p[t]*h_t[t] + n[t]; noise std set by snr_db at the mean signal level"""
     D_tx      = system["D_tx"]
     D_r       = system["D_r"]
     theta_div = system["theta_div"]
     tx_power  = system["tx_power"]
 
-    n = len(ht)   
+    n = len(ht)
 
     hd = h_d(D_tx, D_r, theta_div, L)
     ha = h_a(config.CLEAR_ATTEN_DB_KM, L)
-
     hp = h_p(D_r, L, theta_div, config.THETA_JITTER, n)
-    noise = sample_noise(n)
 
-    r_e = config.ETA * (tx_power * hd * ha * hp * ht) + noise
-    return r_e
+    signal = config.ETA * (tx_power * hd * ha * hp * ht)
+    noise_std = signal.mean() / 10 ** (snr_db / 20)
+    rng = rng or np.random.default_rng()
+    return signal + noise_std * rng.standard_normal(n)
+
+def mean_hp(system, L, n=200_000):
+    """long-run mean of the pointing term: a known system constant, like h_d and h_a"""
+    return h_p(system["D_r"], L, system["theta_div"], config.THETA_JITTER, n).mean()
+
 
 def recover_estimate(r_e, system, L):
-    """Divides out the deterministic factors to recover h_hat"""
+    """divide out everything the receiver knows: path loss, attenuation, mean pointing loss"""
     D_tx, D_r, theta_div, tx_power = system["D_tx"], system["D_r"], system["theta_div"], system["tx_power"]
     hd = h_d(D_tx, D_r, theta_div, L)
     ha = h_a(config.CLEAR_ATTEN_DB_KM, L)
-    h_hat = r_e / (config.ETA * tx_power * hd * ha)
+    h_hat = r_e / (config.ETA * tx_power * hd * ha * mean_hp(system, L))
     return h_hat

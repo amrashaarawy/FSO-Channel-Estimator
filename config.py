@@ -55,6 +55,7 @@ TRAIN_FRAC  = 0.8
 # ACM & EVALUATION
 
 TARGET_BER = 1e-3    # tune
+SNR_DB     = 15      # average operating SNR (dB) at the mean channel, dev default, swept later.
 
 # Mode table 
 # placeholder SNR, selection logic lives in acm.py
