@@ -6,3 +6,4 @@ data/
 *.png
 .ipynb_checkpoints/
 scratch_check.py
+scratch_baselines.py
