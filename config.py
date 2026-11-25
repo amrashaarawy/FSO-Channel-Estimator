@@ -11,7 +11,7 @@ D_TX         = 0.02      # m
 D_R          = 0.40      # m     
 THETA_DIV    = 1e-3      # rad, half-angle divergence     
 THETA_JITTER = 30e-6     # rad                            
-TX_POWER     = 0.01      # W                              
+TX_POWER     = 0.01      # W, AVERAGE optical power (PAM peak level = 2 x average, see acm.py)
 ETA          = 9.3       # A/W responsivity               
 NEP          = 5e-14     # W/√Hz  
 BANDWIDTH    = 1e9       # Hz     
@@ -54,17 +54,22 @@ TRAIN_FRAC  = 0.7
 VAL_FRAC    = 0.15   # test fraction is the remainder
 
 # ACM & EVALUATION
+# thresholds and rates are derived in acm.py from these choices
 
-TARGET_BER = 1e-3    # tune
-SNR_DB     = 15      # average operating SNR (dB) at the mean channel, dev default, swept later.
+# Modes
+PAM_ORDERS = (2, 4, 8)                  # M levels: OOK, 4-PAM, 8-PAM (bits/symbol = log2 M)
+MODE_NAMES = ("OOK", "4-PAM", "8-PAM")  # plot labels only (evaluate.py)
+TARGET_BER = 1e-3    # BER each mode must meet at its threshold
+OFF_BER    = 1e-2    # below OOK at this BER the link switches off (must be > TARGET_BER)
 
-# Mode table 
-# placeholder SNR, selection logic lives in acm.py
-MODE_TABLE = {
-    "OOK":   {"bits_per_sym": 1, "snr_req_db": 13.5},   
-    "4-PAM": {"bits_per_sym": 2, "snr_req_db": 20.0},   
-    "8-PAM": {"bits_per_sym": 3, "snr_req_db": 26.0},   
-}
+# Operating point
+SNR_DB     = 24      # average SNR (dB) at the mean channel; provisional, confirm with the mode-occupancy check
+SNR_RANGE_DB = np.arange(0, 35, 2.5)    # SE-curve axis (average electrical SNR)
 
-SWITCHING_MARGIN_DB = 1.0   
-EBN0_RANGE_DB = np.arange(0, 35, 2.5)   # SE-curve axis
+# Switching policy: neutral defaults = plain threshold lookup, identical for every predictor
+MARGIN_DB     = 1.0    # safety margin on every threshold
+HYSTERESIS_DB = 0.0    # extra dB needed to step UP
+DWELL_UP      = 1      # consecutive decisions wanting a step up before doing it
+DWELL_DOWN    = 1      # same for stepping down (DWELL_UP > DWELL_DOWN = asymmetric switching)
+UPDATE_INTERVAL = 1    # decide every F samples, hold in between
+H_FLOOR       = 1e-3   # floor on predicted gain before the dB conversion
