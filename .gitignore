@@ -7,3 +7,4 @@ data/
 .ipynb_checkpoints/
 scratch_check.py
 scratch_baselines.py
+scratch_*.py
